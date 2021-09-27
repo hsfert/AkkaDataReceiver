@@ -1,0 +1,39 @@
+﻿akka {
+	actor {
+		provider = cluster
+		deployment {
+	        /investment-queue {
+			     router = consistent-hashing-pool
+				 nr-of-instances = @@@NumberOfQueuesPerTopic@@@
+				 cluster {
+				     use-role = messagepublisher
+				 }
+			}
+			/oddschange-queue {
+			    router = consistent-hashing-pool
+				nr-of-instances = @@@NumberOfQueuesPerTopic@@@
+				cluster {
+				     use-role = messagepublisher
+				 }
+			}
+		}
+	}
+	remote {				
+		dot-netty.tcp {
+			hostname = "localhost"
+			port = 4053
+		}
+	}            
+
+	cluster {
+		seed-nodes = ["akka.tcp://datareceiver@localhost:4056"] 
+		roles = [messagepublisher]
+		split-brain-resolver {
+			active-strategy = static-quorum
+			static-quorum {
+				quorum-size = 1
+				role = "lighthouse"
+			}
+		}
+	}
+}

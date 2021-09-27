@@ -1,0 +1,27 @@
+﻿akka {
+	actor {
+		provider = cluster
+		deployment {
+			 
+		}
+	}
+	remote {				
+		dot-netty.tcp {
+			hostname = "localhost"
+			port = 0
+		}
+	}            
+
+	cluster {
+		seed-nodes = ["akka.tcp://datareceiver@localhost:4056"] 
+		roles = [messagereceiver]
+		split-brain-resolver {
+			active-strategy = static-quorum
+			static-quorum {
+				quorum-size = 1
+				role = "lighthouse"
+			}
+		}
+	}
+
+}
