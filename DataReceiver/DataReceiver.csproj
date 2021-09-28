@@ -39,6 +39,9 @@
     <Reference Include="Akka.Cluster, Version=1.4.25.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Akka.Cluster.1.4.25\lib\netstandard2.0\Akka.Cluster.dll</HintPath>
     </Reference>
+    <Reference Include="Akka.Cluster.Tools, Version=1.4.25.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Akka.Cluster.Tools.1.4.25\lib\netstandard2.0\Akka.Cluster.Tools.dll</HintPath>
+    </Reference>
     <Reference Include="Akka.Coordination, Version=1.4.25.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Akka.Coordination.1.4.25\lib\netstandard2.0\Akka.Coordination.dll</HintPath>
     </Reference>
@@ -229,6 +232,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataReceiver.Shared\DataReceiver.Shared.csproj">
+      <Project>{b897e8e0-95f0-46d8-bbd5-3be6da7f4ad1}</Project>
+      <Name>DataReceiver.Shared</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MessagePublisher.Shared\MessagePublisher.Shared.csproj">
       <Project>{5152f68d-98f0-4fd8-9b7f-0da754b863dc}</Project>
       <Name>MessagePublisher.Shared</Name>

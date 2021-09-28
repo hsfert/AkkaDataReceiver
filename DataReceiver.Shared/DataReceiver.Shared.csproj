@@ -9,8 +9,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Actors\" />
     <Folder Include="Messages\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MessagePublisher.Shared\MessagePublisher.Shared.csproj" />
   </ItemGroup>
 
 </Project>

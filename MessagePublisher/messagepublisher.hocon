@@ -28,6 +28,7 @@
 	cluster {
 		seed-nodes = ["akka.tcp://datareceiver@localhost:4056"] 
 		roles = [messagepublisher]
+		downing-provider-class = "Akka.Cluster.SBR.SplitBrainResolverProvider, Akka.Cluster"
 		split-brain-resolver {
 			active-strategy = static-quorum
 			static-quorum {

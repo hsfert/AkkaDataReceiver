@@ -3,6 +3,9 @@ using Akka.Configuration;
 using MessagePublisher.Shared.Actors;
 using System.Configuration;
 using System.IO;
+using DataReceiver.Shared.Actors;
+using Akka.Cluster.Tools.Singleton;
+using System;
 
 namespace DataReceiver
 {
@@ -15,12 +18,19 @@ namespace DataReceiver
             var config = ConfigurationFactory.ParseString(configContent);
             using (var actorSystem = ActorSystem.Create("datareceiver", config))
             {
-                actorSystem.ActorOf(Props.Create(() => new MessageReceiver(numberOfQueuesPerTopic, 
-                    "akka.tcp://datareceiver@localhost:4053/", 
+                var messageMasterProps = Props.Create(() => new MessageMaster(numberOfQueuesPerTopic,
+                    "akka.tcp://datareceiver@localhost:4053/",
                     new string[] {
                     "investment-queue",
                     "oddschange-queue"
-                })));
+                }));
+
+                var master = actorSystem.ActorOf(ClusterSingletonManager.Props(
+                    singletonProps: messageMasterProps,
+                    terminationMessage: PoisonPill.Instance,
+                    settings: ClusterSingletonManagerSettings.Create(actorSystem).WithRole("messagereceiver")),
+                    name: "message-master");
+
                 actorSystem.WhenTerminated.Wait();
             }
         }

@@ -16,22 +16,25 @@ namespace MessagePublisher.Shared.Actors
     /// </summary>
     public class MessageReceiver : ReceiveActor
     {
+        private IActorRef _parent;
         private string _publisherUrl;
         private string[] _routerNames;
-        private Dictionary<string, ISourceRef<IPublisherMessage>> messageSources;
-        private Dictionary<string, IActorRef> watched;
+        private Dictionary<string, ISourceRef<IPublisherMessage>> _messageSources;
+        private Dictionary<string, IActorRef> _watched;
         private int _counter;
         private IRunnableGraph<NotUsed> _graph;
         private ICancelable _recurringQueueFinding;
 
-        public MessageReceiver(int numberOfQueuesPerTopic, 
+        public MessageReceiver(IActorRef parent,
+            int numberOfQueuesPerTopic, 
             string publisherUrl, 
             string[] routerNames)
         {
+            _parent = parent;
             _publisherUrl = publisherUrl;
             _routerNames = routerNames;
-            messageSources = new Dictionary<string, ISourceRef<IPublisherMessage>>();
-            watched = new Dictionary<string, IActorRef>();
+            _messageSources = new Dictionary<string, ISourceRef<IPublisherMessage>>();
+            _watched = new Dictionary<string, IActorRef>();
             _counter = numberOfQueuesPerTopic * routerNames.Length;
             Become(WaitingForStreams);
         }
@@ -49,14 +52,14 @@ namespace MessagePublisher.Shared.Actors
             });
             Receive<SourceResponse<IPublisherMessage>>(message =>
             {
-                if (messageSources.ContainsKey(message.QueueName))
+                if (_messageSources.ContainsKey(message.QueueName))
                 {
                     return;
                 }
-                watched[message.QueueName] = message.ActorRef;
+                _watched[message.QueueName] = message.ActorRef;
                 Context.Watch(message.ActorRef);
-                messageSources[message.QueueName] = message.SourceRef;
-                if (_counter == messageSources.Count)
+                _messageSources[message.QueueName] = message.SourceRef;
+                if (_counter == _messageSources.Count)
                 {
                     Become(ReceiveData);
                 }
@@ -69,12 +72,12 @@ namespace MessagePublisher.Shared.Actors
 
         private void PrepareForStream()
         {
-            foreach (var actor in watched.Values)
+            foreach (var actor in _watched.Values)
             {
                 Context.Unwatch(actor);
             }
-            watched.Clear();
-            messageSources.Clear();
+            _watched.Clear();
+            _messageSources.Clear();
             _recurringQueueFinding?.Cancel();
             _recurringQueueFinding = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(2), Self, GetSource.Instance, Self);
@@ -83,18 +86,6 @@ namespace MessagePublisher.Shared.Actors
         private void ReceiveData()
         {
             PrepareForReceivingData();
-            Receive<IEnumerable<IPublisherMessage>>(messages =>
-            {
-                foreach (var message in messages)
-                {
-                    Console.WriteLine("Received Message from " + message.Queue + " with sequence number " + message.SeqNumber);
-                }
-                Sender.Tell(Ack.Instance);
-            });
-            Receive<Init>(_ =>
-            {
-                Sender.Tell(Ack.Instance);
-            });
             Receive<Complete>(_ =>
             {
                 Become(WaitingForStreams);
@@ -108,7 +99,7 @@ namespace MessagePublisher.Shared.Actors
         private void PrepareForReceivingData()
         {
             _recurringQueueFinding?.Cancel();
-            var sources = messageSources.Values.Select(src => src.Source).ToArray();
+            var sources = _messageSources.Values.Select(src => src.Source).ToArray();
             Source<IPublisherMessage, NotUsed> aggregateSource;
             if (sources.Length == 1)
             {
@@ -125,7 +116,7 @@ namespace MessagePublisher.Shared.Actors
             }
             _graph = aggregateSource
                 .GroupedWithin(100, TimeSpan.FromMilliseconds(1000))
-                .To(Sink.ActorRefWithAck<IEnumerable<IPublisherMessage>>(Self, Init.Instance, Ack.Instance, Complete.Instance));
+                .To(Sink.ActorRefWithAck<IEnumerable<IPublisherMessage>>(_parent, Init.Instance, Ack.Instance, Complete.Instance));
             _graph.Run(Context.System.Materializer());
         }
 

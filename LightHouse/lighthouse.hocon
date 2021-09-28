@@ -15,12 +15,26 @@
 	cluster {
 		seed-nodes = ["akka.tcp://datareceiver@localhost:4056"] 
 		roles = [lighthouse]
+		downing-provider-class = "Akka.Cluster.SBR.SplitBrainResolverProvider, Akka.Cluster"
 		split-brain-resolver {
 			active-strategy = static-quorum
 			static-quorum {
 				quorum-size = 1
 				role = "lighthouse"
 			}
+		}
+		singleton {
+			singleton-name = "message-master"
+			role = "messagereceiver"
+			hand-over-retry-interval = 1s
+			min-number-of-hand-over-retries = 5
+			
+		}
+		singleton-proxy {
+			singleton-name = "message-master"
+			role = "messagereceiver"
+			singleton-identification-interval = 1s
+			buffer-size = 1000 
 		}
 	}
 
