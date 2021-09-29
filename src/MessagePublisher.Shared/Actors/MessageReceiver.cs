@@ -3,6 +3,7 @@ using Akka.Actor;
 using Akka.Routing;
 using Akka.Streams;
 using Akka.Streams.Dsl;
+using MessagePublisher.Shared.Config;
 using MessagePublisher.Shared.Messages;
 using System;
 using System.Collections.Generic;
@@ -26,16 +27,14 @@ namespace MessagePublisher.Shared.Actors
         private ICancelable _recurringQueueFinding;
 
         public MessageReceiver(IActorRef parent,
-            int numberOfQueuesPerTopic, 
-            string publisherUrl, 
-            string[] routerNames)
+            MessageReceiverConfig config)
         {
             _parent = parent;
-            _publisherUrl = publisherUrl;
-            _routerNames = routerNames;
+            _publisherUrl = config.PublisherUrl;
+            _routerNames = config.RouterNames;
             _messageSources = new Dictionary<string, ISourceRef<IPublisherMessage>>();
             _watched = new Dictionary<string, IActorRef>();
-            _counter = numberOfQueuesPerTopic * routerNames.Length;
+            _counter = config.NumberOfQueuesPerTopic * _routerNames.Length;
             Become(WaitingForStreams);
         }
 

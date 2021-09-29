@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Akka.Actor;
 using MessagePublisher.Shared.Actors;
+using MessagePublisher.Shared.Config;
 using MessagePublisher.Shared.Messages;
 
 namespace DataReceiver.Shared.Actors
@@ -10,17 +10,13 @@ namespace DataReceiver.Shared.Actors
     public class MessageMaster : ReceiveActor
     {
         private IActorRef _messageReceiver;
-        private int _numberOfQueuesPerTopic;
+        private MessageReceiverConfig _config;
         private string _publisherUrl;
         private string[] _routerNames;
 
-        public MessageMaster(int numberOfQueuesPerTopic,
-            string publisherUrl,
-            string[] routerNames)
+        public MessageMaster(MessageReceiverConfig config)
         {
-            _numberOfQueuesPerTopic = numberOfQueuesPerTopic;
-            _publisherUrl = publisherUrl;
-            _routerNames = routerNames;
+            _config = config;
             Become(ReceiveMessage);
         }
 
@@ -43,9 +39,7 @@ namespace DataReceiver.Shared.Actors
         protected override void PreStart()
         {
             _messageReceiver = Context.ActorOf(Props.Create(() => new MessageReceiver(Self,
-                    _numberOfQueuesPerTopic,
-                    _publisherUrl,
-                    _routerNames)), "message-receiver");
+                    _config)), "message-receiver");
             base.PreStart();
         }
     }

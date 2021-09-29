@@ -1,4 +1,5 @@
 ﻿using Akka.Actor;
+using MessagePublisher.Config;
 using MessagePublisher.Messages;
 using MessagePublisher.Models;
 using MessagePublisher.Shared.Messages;
@@ -18,16 +19,18 @@ namespace MessagePublisher.Actors
         private ICancelable _recurringNewInvestment;
         private ICancelable _recurringNewOddsChange;
         private ICancelable _recurringPublishNewInvestment;
+        private GameActorConfig _config;
         private int _gameId;
         private Game _game;
         private IActorRef _investmentPublisher;
         private IActorRef _oddsChangePublisher;
 
-        public GameActor(int gameID, IActorRef investmentPublisher, IActorRef oddsChangePublisher)
+        public GameActor(int gameID, IActorRef investmentPublisher, IActorRef oddsChangePublisher, GameActorConfig config)
         {
             _investmentPublisher = investmentPublisher;
             _oddsChangePublisher = oddsChangePublisher;
             _gameId = gameID;
+            _config = config;
             _game = new Game(gameID);
             _game.InitializeGame();
             Become(UpdateInformation);
@@ -135,16 +138,13 @@ namespace MessagePublisher.Actors
 
         protected override void PreStart()
         {
-            double frequencyOfInvestmentPerSecond = double.Parse(ConfigurationManager.ConnectionStrings["FrequencyOfInvestmentPerSecond"].ConnectionString);
-            double frequencyOfOddsChangePerMinute = double.Parse(ConfigurationManager.ConnectionStrings["FrequencyOfOddsUpdatePerMinute"].ConnectionString);
-            double frequencyOfSnapshotPerMinute = double.Parse(ConfigurationManager.ConnectionStrings["FrequencyOfPublishingInvestmentSnapshotPerMinute"].ConnectionString);
             _recurringNewInvestment = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(1),
-                TimeSpan.FromSeconds(1 / frequencyOfInvestmentPerSecond), Self, AddInvestment.Instance, Self);
+                TimeSpan.FromSeconds(1 / _config.FrequencyOfInvestmentPerSecond), Self, AddInvestment.Instance, Self);
             _recurringPublishNewInvestment = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(1),
-                TimeSpan.FromMinutes(1 / frequencyOfSnapshotPerMinute), Self, PublishInvestmentSnapshot.Instance, Self);
+                TimeSpan.FromMinutes(1 / _config.FrequencyOfPublishingInvestmentSnapshotPerMinute), Self, PublishInvestmentSnapshot.Instance, Self);
             _recurringNewOddsChange =
                 Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(1),
-                    TimeSpan.FromMinutes(1 / frequencyOfOddsChangePerMinute), Self, OddsChange.Instance, Self);
+                    TimeSpan.FromMinutes(1 / _config.FrequencyOfOddsChangePerMinute), Self, OddsChange.Instance, Self);
             base.PreStart();
         }
 
@@ -156,8 +156,8 @@ namespace MessagePublisher.Actors
             base.PostStop();
         }
 
-        public static Props Props(int gameId, IActorRef investmentRouter, IActorRef oddsChangeRouter) {
-            return Akka.Actor.Props.Create(() => new GameActor(gameId, investmentRouter, oddsChangeRouter));
+        public static Props Props(int gameId, IActorRef investmentRouter, IActorRef oddsChangeRouter, GameActorConfig config) {
+            return Akka.Actor.Props.Create(() => new GameActor(gameId, investmentRouter, oddsChangeRouter, config));
         }
     }
 }
