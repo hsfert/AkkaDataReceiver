@@ -1,6 +1,8 @@
-﻿namespace MessagePublisher.Shared.Models
+﻿using System;
+
+namespace MessagePublisher.Shared.Models
 {
-    public class GPCKey
+    public class GPCKey : IEquatable<GPCKey>
     {
         public int GameId { get; private set; }
         public int PoolId { get; private set; }

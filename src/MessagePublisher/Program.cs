@@ -5,7 +5,6 @@ using MessagePublisher.Actors;
 using MessagePublisher.Config;
 using MessagePublisher.Shared.Actors;
 using Microsoft.Extensions.Configuration;
-using System.Configuration;
 using System.IO;
 
 namespace MessagePublisher

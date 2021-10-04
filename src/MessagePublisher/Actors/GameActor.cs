@@ -6,7 +6,6 @@ using MessagePublisher.Shared.Messages;
 using MessagePublisher.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 
 namespace MessagePublisher.Actors
 {

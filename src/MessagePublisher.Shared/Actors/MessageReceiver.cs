@@ -85,7 +85,7 @@ namespace MessagePublisher.Shared.Actors
         private void ReceiveData()
         {
             PrepareForReceivingData();
-            Receive<Complete>(_ =>
+            Receive<StreamCompleted>(_ =>
             {
                 Become(WaitingForStreams);
             });
@@ -115,7 +115,7 @@ namespace MessagePublisher.Shared.Actors
             }
             _graph = aggregateSource
                 .GroupedWithin(100, TimeSpan.FromMilliseconds(1000))
-                .To(Sink.ActorRefWithAck<IEnumerable<IPublisherMessage>>(_parent, Init.Instance, Ack.Instance, Complete.Instance));
+                .To(Sink.ActorRefWithAck<IEnumerable<IPublisherMessage>>(_parent, StreamInit.Instance, StreamAck.Instance, StreamCompleted.Instance));
             _graph.Run(Context.System.Materializer());
         }
 

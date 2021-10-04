@@ -14,7 +14,7 @@ namespace MessagePublisher.Models
 
         public void InitializeGame()
         {
-            int numberOfPools = RandomGenerator.Instance.Next(3, 10);
+            int numberOfPools = /*RandomGenerator.Instance.Next(3, 10);*/ 10;
             Pools = new Pool[numberOfPools];
             for (int i = 0; i < numberOfPools; i++)
             {

@@ -64,12 +64,12 @@ namespace MessagePublisher.Shared.Actors
                 }
             });
 
-            Receive<Init>(_ =>
+            Receive<StreamInit>(_ =>
             {
-                Sender.Tell(Ack.Instance);
+                Sender.Tell(StreamAck.Instance);
             });
 
-            Receive<Complete>(_ =>
+            Receive<StreamCompleted>(_ =>
             {
                 this._queue.Complete();
             });

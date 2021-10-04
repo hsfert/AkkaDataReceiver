@@ -1,4 +1,5 @@
 ﻿using Akka.Routing;
+
 namespace MessagePublisher.Shared.Messages
 {
     public interface IPublisherMessage  : IConsistentHashable

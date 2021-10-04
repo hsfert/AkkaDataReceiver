@@ -1,10 +1,11 @@
 ﻿using Akka.Actor;
-using Akka.Configuration;
-using System.IO;
 using Akka.Cluster.Tools.Singleton;
+using Akka.Configuration;
+using Akka.Routing;
 using DataReceiver.Shared.Actors;
 using MessagePublisher.Shared.Config;
 using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace DataReceiver
 {
@@ -17,7 +18,16 @@ namespace DataReceiver
 
             using (var actorSystem = ActorSystem.Create("datareceiver", akkaConfig))
             {
-                var messageMasterProps = Props.Create(() => new MessageMaster(masterConfig));
+                var poolRouter = actorSystem.ActorOf(
+                    Props.Create(() => new PoolSnapshotActor())
+                                .WithRouter(FromConfig.Instance), "pool-snapshot");
+
+                var poolMessageRouter =
+                        actorSystem.ActorOf(
+                            Props.Create(() => new PoolMessageDispatcherActor(poolRouter))
+                                .WithRouter(FromConfig.Instance), "pool-message-dispatcher");
+               
+                var messageMasterProps = Props.Create(() => new MessageMaster(masterConfig, poolMessageRouter));
 
                 var master = actorSystem.ActorOf(ClusterSingletonManager.Props(
                     singletonProps: messageMasterProps,
