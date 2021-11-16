@@ -1,4 +1,7 @@
 ﻿using Akka.Actor;
+using DbCombination = DataReceiver.Shared.Database.Combination;
+using DataReceiverEntity = DataReceiver.Shared.Database.DataReceiverEntity;
+using DataReceiver.Shared.Database.ScriptHelper;
 using DataReceiver.Shared.Messages;
 using DataReceiver.Shared.Models;
 using System;
@@ -8,24 +11,42 @@ namespace DataReceiver.Shared.Actors
 {
     public class PoolSnapshotActor : ReceiveActor
     {
-        private Dictionary<long, Pool> _pools;
+        private ICancelable _recurringDatabaseUpdate;
+        private PoolDatabaseDictionary _pools;
         public PoolSnapshotActor()
         {
-            _pools = new Dictionary<long, Pool>();
+            _pools = new PoolDatabaseDictionary();
             Become(UpdatePool);
         }
 
         private void UpdatePool()
         {
+            Receive<UpdateDatabase>(_ =>
+            {
+                List<DbCombination> updatedEntries = new List<DbCombination>();
+                foreach(var pool in _pools.GetAllPools())
+                {
+                    List<DbCombination> updatedEntriesInPool;
+                    if(pool.GetUpdatedEntries(out updatedEntriesInPool))
+                    {
+                        updatedEntries.AddRange(updatedEntriesInPool);
+                    }
+                }
+
+                if(updatedEntries.Count > 0)
+                {
+                    using(var content = new DataReceiverEntity())
+                    {
+                        string sql = CombinationUpdateHelper.Instance.ProduceSQL(updatedEntries);
+                        content.ExecuteSqlCommand(sql, null);
+                    }
+                }
+            });
+
             Receive<IPoolMessage>(message =>
             {
                 Console.WriteLine($"{DateTime.Now} Received message with SeqNumber {message.SeqNumber}, PoolId {message.PoolId} and MessageType {message.MessageType}");
-                Pool pool;
-                if(!_pools.TryGetValue(message.PoolId, out pool))
-                {
-                    pool = new Pool(message.PoolId, message.GameId);
-                    _pools[message.PoolId] = pool;
-                }
+                PoolManager pool = _pools.GetOrAddPool(message.GameId, message.PoolId);
                 if(message is PoolInvestmentUpdateMessage investment)
                 {
                     pool.UpdateInvestment(investment.SeqNumber, investment.Combinations);
@@ -41,13 +62,16 @@ namespace DataReceiver.Shared.Actors
 
         protected override void PreStart()
         {
-            Console.WriteLine("Setting up PoolSnapshotActor with Path " + Self.Path);
+            _recurringDatabaseUpdate =
+              Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(10),
+              TimeSpan.FromSeconds(10), Self, UpdateDatabase.Instance, ActorRefs.NoSender);
             base.PreStart();
         }
 
         protected override void PostStop()
         {
             Console.WriteLine("Destorying PoolSnapshotActor with Path " + Self.Path);
+            _recurringDatabaseUpdate?.Cancel();
             base.PostStop();
         }
     }

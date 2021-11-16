@@ -4,6 +4,7 @@ using Akka.Routing;
 using MessagePublisher.Actors;
 using MessagePublisher.Config;
 using MessagePublisher.Shared.Actors;
+using MessagePublisher.Shared.Utility;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 
@@ -29,10 +30,7 @@ namespace MessagePublisher
 
         private static GameActorConfig GetGameActorConfig()
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder()
-               .AddJsonFile($"appsettings.json", true, true);
-            var config = builder.Build();
-            var gameConfig = GameActorConfig.FromConfig(config);
+            var gameConfig = GameActorConfig.FromConfig(ConfigurationExtractor.Instance.Config);
             return gameConfig;
         }
 

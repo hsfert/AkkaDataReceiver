@@ -4,7 +4,7 @@ using Akka.Configuration;
 using Akka.Routing;
 using DataReceiver.Shared.Actors;
 using MessagePublisher.Shared.Config;
-using Microsoft.Extensions.Configuration;
+using MessagePublisher.Shared.Utility;
 using System.IO;
 
 namespace DataReceiver
@@ -41,10 +41,7 @@ namespace DataReceiver
 
         private static MessageReceiverConfig GetMessageMasterConfig()
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder()
-               .AddJsonFile($"appsettings.json", true, true);
-            var config = builder.Build();
-            var masterConfig = MessageReceiverConfig.FromConfig(config);
+            var masterConfig = MessageReceiverConfig.FromConfig(ConfigurationExtractor.Instance.Config);
             return masterConfig;
         }
 

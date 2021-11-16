@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DataReceiver": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
