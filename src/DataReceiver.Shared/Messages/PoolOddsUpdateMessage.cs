@@ -9,10 +9,10 @@ namespace DataReceiver.Shared.Messages
         public int GameId { get; private set; }
         public long PoolId { get; private set; }
         public PoolMessageType MessageType { get; private set; }
-        public List<CombinationOddsChange> Combinations { get; private set; }
+        public IReadOnlyList<CombinationOddsChange> Combinations { get; private set; }
         public object ConsistentHashKey => PoolId;
 
-        public PoolOddsUpdateMessage(long seqNumber, int gameId, long poolId, List<CombinationOddsChange> combinations)
+        public PoolOddsUpdateMessage(long seqNumber, int gameId, long poolId, IReadOnlyList<CombinationOddsChange> combinations)
         {
             SeqNumber = seqNumber;
             GameId = gameId;

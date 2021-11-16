@@ -8,13 +8,13 @@ namespace MessagePublisher.Shared.Messages
         public long SeqNumber { get; private set; }
         public string Queue { get; private set; }
         public long GameId { get; private set; }
-        public List<PoolOddsChange> OddsChange { get; private set; }
+        public IReadOnlyList<PoolOddsChange> OddsChange { get; private set; }
         public object ConsistentHashKey { get { return GameId; } }
 
         public OddsChangeMessage(long seqNumber,
             string queue,
             long gameId,
-            List<PoolOddsChange> oddsChange)
+            IReadOnlyList<PoolOddsChange> oddsChange)
         {
             SeqNumber = seqNumber;
             Queue = queue;

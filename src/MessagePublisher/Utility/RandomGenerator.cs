@@ -14,7 +14,10 @@ namespace MessagePublisher.Utility
 
         public int Next(int minValue, int maxValue)
         {
-            return _rnd.Next(minValue, maxValue);
+            lock (_rnd)
+            {
+                return _rnd.Next(minValue, maxValue);
+            }
         }
     }
 }

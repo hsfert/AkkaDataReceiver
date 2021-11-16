@@ -8,13 +8,13 @@ namespace MessagePublisher.Shared.Messages
         public long SeqNumber { get; private set; }
         public string Queue { get; private set; }
         public int GameId { get; private set; }
-        public List<PoolInvestment> Investments { get; private set; }
+        public IReadOnlyList<PoolInvestment> Investments { get; private set; }
         public object ConsistentHashKey { get { return GameId; } }
 
         public InvestmentSnapshotMessage(long seqNumber,
             string queue,
             int gameId,
-            List<PoolInvestment> investments)
+            IReadOnlyList<PoolInvestment> investments)
         {
             SeqNumber = seqNumber;
             Queue = queue;

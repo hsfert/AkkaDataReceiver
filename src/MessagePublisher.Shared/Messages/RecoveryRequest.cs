@@ -5,9 +5,9 @@ namespace MessagePublisher.Shared.Messages
 {
     public class RecoveryRequest
     {
-        public List<RecoveryInfo> Informations { get; private set; }
+        public IReadOnlyList<RecoveryInfo> Informations { get; private set; }
 
-        public RecoveryRequest(List<RecoveryInfo> informations)
+        public RecoveryRequest(IReadOnlyList<RecoveryInfo> informations)
         {
             Informations = informations;
         }

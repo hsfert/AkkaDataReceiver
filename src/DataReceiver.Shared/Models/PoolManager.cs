@@ -20,8 +20,8 @@ namespace DataReceiver.Shared.Models
             _combinations = new CombinationDatabaseDictionary(gameId);
         }
 
-        public void UpdateInvestment(long seqNumber, 
-            List<CombinationInvestment> investments)
+        public void UpdateInvestment(long seqNumber,
+            IReadOnlyList<CombinationInvestment> investments)
         {
             var combinations = _combinations.GetOrAddCombinations(investments.Select(investment => investment.Key).ToList());
             CombinationManager combination; 
@@ -33,7 +33,8 @@ namespace DataReceiver.Shared.Models
             }
         }
 
-        public void UpdateOdds(long seqNumber, List<CombinationOddsChange> oddsChanges)
+        public void UpdateOdds(long seqNumber, 
+            IReadOnlyList<CombinationOddsChange> oddsChanges)
         {
             var combinations = _combinations.GetOrAddCombinations(oddsChanges.Select(oddsChange => oddsChange.Key).ToList());
             CombinationManager combination;

@@ -23,24 +23,7 @@ namespace DataReceiver.Shared.Actors
         {
             Receive<UpdateDatabase>(_ =>
             {
-                List<DbCombination> updatedEntries = new List<DbCombination>();
-                foreach(var pool in _pools.GetAllPools())
-                {
-                    List<DbCombination> updatedEntriesInPool;
-                    if(pool.GetUpdatedEntries(out updatedEntriesInPool))
-                    {
-                        updatedEntries.AddRange(updatedEntriesInPool);
-                    }
-                }
-
-                if(updatedEntries.Count > 0)
-                {
-                    using(var content = new DataReceiverEntity())
-                    {
-                        string sql = CombinationUpdateHelper.Instance.ProduceSQL(updatedEntries);
-                        content.ExecuteSqlCommand(sql, null);
-                    }
-                }
+                FlushDatabaseUpdate();
             });
 
             Receive<IPoolMessage>(message =>
@@ -60,6 +43,28 @@ namespace DataReceiver.Shared.Actors
             });
         }
 
+        private void FlushDatabaseUpdate()
+        {
+            List<DbCombination> updatedEntries = new List<DbCombination>();
+            foreach (var pool in _pools.GetAllPools())
+            {
+                List<DbCombination> updatedEntriesInPool;
+                if (pool.GetUpdatedEntries(out updatedEntriesInPool))
+                {
+                    updatedEntries.AddRange(updatedEntriesInPool);
+                }
+            }
+
+            if (updatedEntries.Count > 0)
+            {
+                using (var content = new DataReceiverEntity())
+                {
+                    string sql = CombinationUpdateHelper.Instance.ProduceSQL(updatedEntries);
+                    content.ExecuteSqlCommand(sql, null);
+                }
+            }
+        }
+
         protected override void PreStart()
         {
             _recurringDatabaseUpdate =
@@ -72,6 +77,8 @@ namespace DataReceiver.Shared.Actors
         {
             Console.WriteLine("Destorying PoolSnapshotActor with Path " + Self.Path);
             _recurringDatabaseUpdate?.Cancel();
+            Console.WriteLine("Trying to flush the updates...");
+            FlushDatabaseUpdate();
             base.PostStop();
         }
     }
